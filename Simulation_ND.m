@@ -1,5 +1,9 @@
-%% 240811 Nonlinear Dynamics Model
+%% 240815 Nonlinear Dynamics Model
 % by Seungyong Han
+% NOTE
+% 1. M(fuzzy set) should be constructed in the premise variable dependent form, not system state.
+% 2. If designer did not consider min, max of premise variable, then summation rule is importnat.
+
 clear
 clc
 close all
@@ -34,7 +38,8 @@ sample_size = size(tspan,2);
 % x(1) \in [-a a] = [-1.4 1.4]
 % x(3) \in [-b b] = [-0.7, 0.7]
 
-x(:,1) = [1.4 0.5 0.7 -0.6];  
+x(:,1) = [-30 0.5 0.7 -0.6];  
+% simulation success upto x(1,1) \in [-30 28]
 
 U=0;
 u_temp(:,1)=U;
@@ -42,53 +47,56 @@ u_temp(:,1)=U;
     for i=1:sample_size-1
     W(:,i) = 0*exp(-0.1*i*ti)*sin(1*i*ti);
     
-    if x(1,i) < 0
+   z1 = x(1,i)^2; % premise variable!, M should be constructed in the premise variable dependent form, not system state
+    z2 = x(3,i);
+    
+    if z1 < 0
         M{1} = 1;
-    elseif x(1,i) > a/2
+    elseif z1 > (a/2)^2
         M{1} = 0;
     else
-        M{1} = (x(1,i)^2 - (a/2)^2)/(0 - (a/2)^2);
+        M{1} = (z1 - (a/2)^2)/(0 - (a/2)^2);
     end
     
-    if x(1,i) < 0 || x(1,i) >  a
+    if z1 < 0 || z1 >  a^2
         M{2} = 0;
     else
-        M{2} = ((x(1,i)^2 - 0)/((a/2)^2 - 0))*((x(1,i)^2 - a^2)/((a/2)^2 - a^2));
+        M{2} = ((z1 - 0)/((a/2)^2 - 0))*((z1 - a^2)/((a/2)^2 - a^2));
     end
     
-    if x(1,i) < a/2
-        M{3} = 1;
+    if z1 < (a/2)^2
+        M{3} = 0;
     else
-        M{3} = (x(1,i)^2 - (a/2)^2)/(a^2 - (a/2)^2);
+        M{3} = (z1 - (a/2)^2)/(a^2 - (a/2)^2);
     end
     
    
-    if x(3,i) < -b
+    if z2 < -b
         N{1} = 1;
-    elseif x(3,i) < -b/2
+    elseif z2 < -b/2
         N{1} = 0;
     else
-        N{1} = (x(3,i)+b/2)/(-b+b/2);
+        N{1} = (z2+b/2)/(-b+b/2);
     end
     
-    if x(3,i) < -b || x(3,i) > b/2
+    if z2 < -b || z2 > b/2
         N{2} = 0;
     else
-        N{2} = ((x(3,i)+b)/(-b/2 + b))*((x(3,i)-b/2)/(-b/2 -b/2));
+        N{2} = ((z2+b)/(-b/2 + b))*((z2-b/2)/(-b/2 -b/2));
     end
     
-    if x(3,i) < -b/2 || x(3,i) > b
+    if z2 < -b/2 || z2 > b
         N{3} = 0;
     else
-        N{3} = ((x(3,i)+b/2)/(b/2 + b/2))*((x(3,i)-b)/(b/2 -b));
+        N{3} = ((z2+b/2)/(b/2 + b/2))*((z2-b)/(b/2 -b));
     end
  
-   if x(3,i) < b/2
+   if z2 < b/2
         N{4} = 0;
-   elseif x(3,i) > b
+   elseif z2 > b
         N{4} = 1;
     else
-        N{4} = ((x(3,i)-b/2)/(b - b/2));
+        N{4} = ((z2-b/2)/(b - b/2));
     end
  
     %% normalized membership function
@@ -100,7 +108,7 @@ u_temp(:,1)=U;
     
     sum_w = 0;
     for kk = 1:n_r
-        sum_w = sum_w + sum(w{kk});
+        sum_w = sum_w + sum(w{kk}); % if designer did not consider min, max of premise variable, then summation rule is importnat
     end
     
     num_k = 1;
