@@ -47,10 +47,10 @@ u_temp(:,1)=U;
     for i=1:sample_size-1
     W(:,i) = 0*exp(-0.1*i*ti)*sin(1*i*ti);
     
-   z1 = x(1,i)^2; % premise variable!, M should be constructed in the premise variable dependent form, not system state
+    z1 = x(1,i)^2; % premise variable!, M should be constructed in the premise variable dependent form, not system state
     z2 = x(3,i);
     
-    if z1 < 0
+        if z1 < 0
         M{1} = 1;
     elseif z1 > (a/2)^2
         M{1} = 0;
@@ -58,7 +58,9 @@ u_temp(:,1)=U;
         M{1} = (z1 - (a/2)^2)/(0 - (a/2)^2);
     end
     
-    if z1 < 0 || z1 >  a^2
+    if z1 < 0
+        M{2} = 0;
+    elseif z1 >  a^2
         M{2} = 0;
     else
         M{2} = ((z1 - 0)/((a/2)^2 - 0))*((z1 - a^2)/((a/2)^2 - a^2));
@@ -66,6 +68,8 @@ u_temp(:,1)=U;
     
     if z1 < (a/2)^2
         M{3} = 0;
+    elseif z1 > a^2
+        M{3} = 1;
     else
         M{3} = (z1 - (a/2)^2)/(a^2 - (a/2)^2);
     end
@@ -73,7 +77,7 @@ u_temp(:,1)=U;
    
     if z2 < -b
         N{1} = 1;
-    elseif z2 < -b/2
+    elseif z2 > -b/2
         N{1} = 0;
     else
         N{1} = (z2+b/2)/(-b+b/2);
@@ -111,14 +115,21 @@ u_temp(:,1)=U;
         sum_w = sum_w + sum(w{kk}); % if designer did not consider min, max of premise variable, then summation rule is importnat
     end
     
+    
+%     if isnan(sum_w)==1
+%         disp('error!!!!!!!!!!!')
+%     end
     num_k = 1;
+    sum_h = 0;
     for k1 = 1:size(pre_x1,2)
         for k2 = 1:size(pre_x3,2)
             h{num_k} = w{k1,k2}/sum_w;
+            sum_h = sum_h + h{num_k};
             num_k  = num_k + 1;
+            
         end
     end
-       
+%     sum_h
     gain = 0;
     for kk = 1:n_r
         gain = gain + h{kk}*K{kk};
